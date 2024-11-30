@@ -350,4 +350,4 @@ MigrationBackup/
 .ionide/
 
 
-AdventOfCode/Inputs/
+AdventOfCode/Inputs/*
