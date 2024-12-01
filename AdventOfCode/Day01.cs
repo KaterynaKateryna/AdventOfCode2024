@@ -2,14 +2,34 @@
 
 public class Day01 : BaseDay
 {
-    private readonly string _input;
+    private List<int> first = new List<int>();
+    private List<int> second = new List<int>();
 
     public Day01()
     {
-        _input = File.ReadAllText(InputFilePath);
+        string[] lines = File.ReadAllLines(InputFilePath);
+        foreach (string line in lines)
+        {
+            string[] parts = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            first.Add(int.Parse(parts[0]));
+            second.Add(int.Parse(parts[1]));
+        }
     }
 
-    public override ValueTask<string> Solve_1() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 1");
+    public override ValueTask<string> Solve_1()
+    {
+        long result = 0;
+
+        first = first.OrderBy(x => x).ToList();
+        second = second.OrderBy(x => x).ToList();
+
+        for (int i = 0; i < first.Count; i++)
+        {
+            result += Math.Abs(first[i] - second[i]);
+        }
+
+        return new(result.ToString());
+    }
 
     public override ValueTask<string> Solve_2() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 2");
 }
