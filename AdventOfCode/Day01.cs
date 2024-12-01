@@ -31,5 +31,30 @@ public class Day01 : BaseDay
         return new(result.ToString());
     }
 
-    public override ValueTask<string> Solve_2() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 2");
+    public override ValueTask<string> Solve_2()
+    {
+        long result = 0;
+
+        Dictionary<int, int> secondDictionary = new Dictionary<int, int>();
+        foreach (int i in second)
+        {
+            if (secondDictionary.ContainsKey(i))
+            {
+                secondDictionary[i]++;
+            }
+            else
+            {
+                secondDictionary[i] = 1;
+            }
+        }
+
+        foreach (int i in first)
+        {
+            if (secondDictionary.ContainsKey(i))
+            {
+                result += i * secondDictionary[i];
+            }
+        }
+        return new(result.ToString());
+    }
 }
