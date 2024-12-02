@@ -27,20 +27,31 @@ public class Day02 : BaseDay
     public override ValueTask<string> Solve_1()
     {
         var reports = Init();
-        int result = reports.Where(x => IsSafe(x, useDampener: false)).Count();
+        int result = reports.Count(IsSafe);
         return new(result.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
         var reports = Init();
-        int result = reports.Where(x => 
-            IsSafe(x.Take(x.Count).ToList(), useDampener: true) || IsSafe(x.Skip(1).ToList(), useDampener: false)
-        ).Count();
+        int result = reports.Count(IsSafeWithDampener);
         return new(result.ToString());
     }
 
-    private bool IsSafe(List<int> report, bool useDampener)
+    private bool IsSafeWithDampener(List<int> report)
+    {
+        for (int i = 0; i < report.Count; ++i)
+        {
+            var attempt = report.Take(i).Concat(report.Skip(i+1)).ToList();
+            if (IsSafe(attempt))
+            { 
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsSafe(List<int> report)
     {
         if (report.Count < 2)
         { 
@@ -52,7 +63,6 @@ public class Day02 : BaseDay
         }
 
         bool isAscending = report[1] - report[0] > 0;
-        bool dampenerUsed = false;
 
         for (int i = 1; i < report.Count; ++i)
         {
@@ -60,16 +70,7 @@ public class Day02 : BaseDay
             int absDiff = Math.Abs(diff);
             if (absDiff == 0 || absDiff > 3 || (diff > 0 && !isAscending) || (diff < 0 && isAscending))
             {
-                if (useDampener && !dampenerUsed)
-                {
-                    report.RemoveAt(i);
-                    i--;
-                    dampenerUsed = true;
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
         }
 
