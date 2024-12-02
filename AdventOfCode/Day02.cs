@@ -1,41 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day02 : BaseDay
 {
-    List<List<int>> reports = new List<List<int>>();
+    public virtual string[] GetLines()
+    { 
+        return File.ReadAllLines(InputFilePath);
+    }
 
-    public Day02()
+    private List<List<int>> Init()
     {
-        string[] lines = File.ReadAllLines(InputFilePath);
+        string[] lines = GetLines();
 
+        List<List<int>> reports = new List<List<int>>();
         foreach (string line in lines)
-        { 
+        {
             List<int> levels = line.Split(" ", StringSplitOptions.RemoveEmptyEntries)
                 .Select(int.Parse)
                 .ToList();
 
             reports.Add(levels);
         }
+
+        return reports;
     }
 
     public override ValueTask<string> Solve_1()
     {
-        int result = reports.Where(IsSafe).Count();
+        var reports = Init();
+        int result = reports.Where(x => IsSafe(x, useDampener: false)).Count();
         return new(result.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        var reports = Init();
+        int result = reports.Where(x => 
+            IsSafe(x.Take(x.Count).ToList(), useDampener: true) || IsSafe(x.Skip(1).ToList(), useDampener: false)
+        ).Count();
+        return new(result.ToString());
     }
 
-    private bool IsSafe(List<int> report)
+    private bool IsSafe(List<int> report, bool useDampener)
     {
         if (report.Count < 2)
         { 
@@ -47,18 +52,24 @@ public class Day02 : BaseDay
         }
 
         bool isAscending = report[1] - report[0] > 0;
+        bool dampenerUsed = false;
 
         for (int i = 1; i < report.Count; ++i)
         {
             int diff = report[i] - report[i - 1];
             int absDiff = Math.Abs(diff);
-            if (absDiff == 0 || absDiff > 3)
+            if (absDiff == 0 || absDiff > 3 || (diff > 0 && !isAscending) || (diff < 0 && isAscending))
             {
-                return false;
-            }
-            if ((diff > 0 && !isAscending) || (diff < 0 && isAscending))
-            {
-                return false;
+                if (useDampener && !dampenerUsed)
+                {
+                    report.RemoveAt(i);
+                    i--;
+                    dampenerUsed = true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
