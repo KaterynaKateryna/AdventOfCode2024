@@ -41,7 +41,17 @@ public class Day04 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        int result = 0;
+
+        for (int i = 0; i < _height; i++)
+        {
+            for (int j = 0; j < _width; j++)
+            {
+                result += IsXMas(i, j) ? 1 : 0;
+            }
+        }
+
+        return new(result.ToString());
     }
 
     private int CountXmases(int i, int j)
@@ -107,5 +117,36 @@ public class Day04 : BaseDay
     private bool IsMas(char m, char a, char s)
     {
         return m == 'M' && a == 'A' && s == 'S';
+    }
+
+    private bool IsXMas(int i, int j)
+    {
+        if (_input[i, j] != 'A')
+        { 
+            return false;
+        }
+
+        if (i == 0 || i == _height - 1 || j == 0 || j == _width - 1)
+        {
+            return false;
+        }
+
+        char[] ms = new char[4];
+        ms[0] = _input[i - 1, j - 1];
+        ms[1] = _input[i - 1, j + 1]; 
+        ms[2] = _input[i + 1, j - 1];
+        ms[3] = _input[i + 1, j + 1];
+
+        if (ms.Count(x => x == 'M') != 2 || ms.Count(x => x == 'S') != 2)
+        { 
+            return false;
+        }
+
+        if (ms[0] == ms[3] && ms[1] == ms[2])
+        {
+            return false;
+        }
+
+        return true;
     }
 }
