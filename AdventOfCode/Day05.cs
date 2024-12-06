@@ -58,7 +58,18 @@ internal class Day05 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        int result = 0;
+        foreach (var update in updates)
+        {
+            if (!IsCorrectOrder(update))
+            {
+                Sort(update, 0, update.Count - 1);
+                int middle = update.Skip(update.Count / 2).First();
+                result += middle;
+            }
+        }
+
+        return new(result.ToString());
     }
 
     private bool IsCorrectOrder(List<int> update)
@@ -85,5 +96,38 @@ internal class Day05 : BaseDay
         }
 
         return true;
+    }
+
+    private void Sort(List<int> update, int leftIndex, int rightIndex)
+    {
+        if (leftIndex >= rightIndex 
+            || leftIndex < 0 
+            || leftIndex >= update.Count
+            || rightIndex < 0
+            || rightIndex >= update.Count
+        )
+        {
+            return;
+        }
+
+        int pivotIndex = leftIndex;
+        int pivot = update[leftIndex];
+
+        rulesReversed.TryGetValue(pivot, out List<int> haveToBeToTheLeft);
+
+        for (int i = leftIndex + 1; i <= rightIndex; i++)
+        {
+            int current = update[i];
+            if (haveToBeToTheLeft.Contains(current))
+            {
+                update.RemoveAt(i);
+                update.Insert(pivotIndex, current);
+                pivotIndex++;
+                i--;
+            }
+        }
+
+        Sort(update, leftIndex, pivotIndex-1);
+        Sort(update, pivotIndex + 1, rightIndex);
     }
 }
