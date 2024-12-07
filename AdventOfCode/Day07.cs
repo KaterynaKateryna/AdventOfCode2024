@@ -11,31 +11,44 @@ public class Day07 : BaseDay
 
     public override ValueTask<string> Solve_1()
     {
-        return new(_equations.Where(IsSolvable).Sum(x => x.TestValue).ToString());
+        return new(_equations.Where(x => IsSolvable(x, useConcatenation: false)).Sum(x => x.TestValue).ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        return new(_equations.Where(x => IsSolvable(x, useConcatenation: true)).Sum(x => x.TestValue).ToString());
     }
 
-    private bool IsSolvable(Equation equation)
+    private bool IsSolvable(Equation equation, bool useConcatenation)
     {
-        return IsSolvable(equation, equation.Numbers[0], 1);
+        return IsSolvable(equation, equation.Numbers[0], 1, useConcatenation);
     }
 
-    private bool IsSolvable(Equation equation, long result, int operandIndex)
+    private bool IsSolvable(Equation equation, long result, int operandIndex, bool useConcatenation)
     {
         if (operandIndex == equation.Numbers.Count)
         { 
             return result == equation.TestValue;
         }
 
+        if (result > equation.TestValue)
+        { 
+            return false;
+        }
+
         long resultAdd = result + equation.Numbers[operandIndex];
-        bool a = IsSolvable(equation, resultAdd, operandIndex + 1);
+        bool a = IsSolvable(equation, resultAdd, operandIndex + 1, useConcatenation);
 
         long resultMultiply = result * equation.Numbers[operandIndex];
-        bool b = IsSolvable(equation, resultMultiply, operandIndex + 1);
+        bool b = IsSolvable(equation, resultMultiply, operandIndex + 1, useConcatenation);
+
+        if (useConcatenation)
+        {
+            long resultConcatenate = long.Parse(result.ToString() + equation.Numbers[operandIndex].ToString());
+            bool c = IsSolvable(equation, resultConcatenate, operandIndex + 1, useConcatenation);
+
+            return a || b || c;
+        }
 
         return a || b;
     }
