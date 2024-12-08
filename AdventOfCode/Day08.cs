@@ -16,7 +16,7 @@ internal class Day08 : BaseDay
         HashSet<Point> antinodes = new HashSet<Point>();
         foreach (var kv in antennas)
         {
-            antinodes.UnionWith(GetAntinodes(kv.Value));
+            antinodes.UnionWith(GetAntinodes(kv.Value, updated: false));
         }
 
         return new(antinodes.Count.ToString());
@@ -24,7 +24,15 @@ internal class Day08 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        Dictionary<char, List<Point>> antennas = GetAntennas();
+
+        HashSet<Point> antinodes = new HashSet<Point>();
+        foreach (var kv in antennas)
+        {
+            antinodes.UnionWith(GetAntinodes(kv.Value, updated: true));
+        }
+
+        return new(antinodes.Count.ToString());
     }
 
     private Dictionary<char, List<Point>> GetAntennas()
@@ -47,7 +55,7 @@ internal class Day08 : BaseDay
         return antennas;
     }
 
-    private HashSet<Point> GetAntinodes(List<Point> antennas)
+    private HashSet<Point> GetAntinodes(List<Point> antennas, bool updated)
     {
         HashSet<Point> antinodes = new HashSet<Point>();
 
@@ -55,29 +63,56 @@ internal class Day08 : BaseDay
         {
             for (int j = i + 1; j < antennas.Count; ++j)
             {
-                (Point? antinodeOne, Point? antinodeTwo) = GetAntinodes(antennas[i], antennas[j]);
-
-                if (antinodeOne != null)
-                {
-                    antinodes.Add(antinodeOne);
-                }
-                if (antinodeTwo != null)
-                {
-                    antinodes.Add(antinodeTwo);
-                }
+                List<Point> a = updated
+                    ? GetAntinodesUpdated(antennas[i], antennas[j]) : GetAntinodes(antennas[i], antennas[j]);
+                antinodes.UnionWith(a);
             }
         }
 
         return antinodes;
     }
 
-    private (Point? antinodeOne, Point? antinodeTwo) GetAntinodes(Point a, Point b)
+    private List<Point> GetAntinodes(Point a, Point b)
     {
+        List<Point> result = new List<Point>();
+
         var antinodeOne = new Point(2 * b.I - a.I, 2 * b.J - a.J);
         var antinodeTwo = new Point(2 * a.I - b.I, 2 * a.J - b.J);
 
-        return (IsWithinBounds(antinodeOne) ? antinodeOne : null, 
-            IsWithinBounds(antinodeTwo) ? antinodeTwo : null);
+        if (IsWithinBounds(antinodeOne))
+        { 
+            result.Add(antinodeOne);
+        }
+        if (IsWithinBounds(antinodeTwo))
+        {
+            result.Add(antinodeTwo);
+        }
+
+        return result;
+    }
+
+    private List<Point> GetAntinodesUpdated(Point a, Point b)
+    {
+        List<Point> resultOne = GetAntinodesUpdatedOneDirection(a, b);
+        List<Point> resultTwo = GetAntinodesUpdatedOneDirection(b, a);
+
+        return resultOne.Concat(resultTwo).ToList();
+    }
+
+    private List<Point> GetAntinodesUpdatedOneDirection(Point a, Point b)
+    {
+        List<Point> result = new List<Point>();
+
+        int n = 1;
+        var antinode = new Point(n * b.I - (n - 1) * a.I, n * b.J - (n - 1) * a.J);
+        while (IsWithinBounds(antinode))
+        {
+            result.Add(antinode);
+            n++;
+            antinode = new Point(n * b.I - (n - 1) * a.I, n * b.J - (n - 1) * a.J);
+        }
+
+        return result;
     }
 
     private bool IsWithinBounds(Point point)
