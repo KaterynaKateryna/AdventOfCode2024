@@ -76,8 +76,8 @@ internal class Day08 : BaseDay
     {
         List<Point> result = new List<Point>();
 
-        var antinodeOne = new Point(2 * b.I - a.I, 2 * b.J - a.J);
-        var antinodeTwo = new Point(2 * a.I - b.I, 2 * a.J - b.J);
+        var antinodeOne = GetAntinode(a, b, 2);
+        var antinodeTwo = GetAntinode(b, a, 2);
 
         if (IsWithinBounds(antinodeOne))
         { 
@@ -104,15 +104,20 @@ internal class Day08 : BaseDay
         List<Point> result = new List<Point>();
 
         int n = 1;
-        var antinode = new Point(n * b.I - (n - 1) * a.I, n * b.J - (n - 1) * a.J);
+        var antinode = GetAntinode(a, b, n);
         while (IsWithinBounds(antinode))
         {
             result.Add(antinode);
             n++;
-            antinode = new Point(n * b.I - (n - 1) * a.I, n * b.J - (n - 1) * a.J);
+            antinode = GetAntinode(a, b, n);
         }
 
         return result;
+    }
+
+    private Point GetAntinode(Point a, Point b, int n)
+    { 
+        return new Point(n * b.I - (n - 1) * a.I, n * b.J - (n - 1) * a.J);
     }
 
     private bool IsWithinBounds(Point point)
