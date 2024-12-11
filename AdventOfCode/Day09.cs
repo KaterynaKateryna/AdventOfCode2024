@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day09 : BaseDay
 {
@@ -23,7 +21,10 @@ public class Day09 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        List<int?> representation = Defragment2();
+
+        long checksum = GetChecksum(representation);
+        return new(checksum.ToString());
     }
 
     private List<int?> GetRepresentation()
@@ -74,6 +75,69 @@ public class Day09 : BaseDay
         }
     }
 
+    private List<int?> Defragment2()
+    {
+        List<int> input = _input.Select(x => int.Parse(x.ToString())).ToList();
+
+        List<Block> blocks = new List<Block>();
+
+        int index = 0;
+        int fileIndex = 0;
+        for (int i = 0; i < input.Count; ++i)
+        {
+            blocks.Add(new Block(index, input[i], i % 2 == 0 ? fileIndex : null, Moved: false));
+            index += input[i];
+            if (i % 2 == 0)
+            {
+                fileIndex++;
+            }
+        }
+
+        for (int i = blocks.Count - 1; i >= 0; i--)
+        {
+            Block toMove = blocks[i];
+            if (toMove.FileIndex.HasValue && !toMove.Moved)
+            {
+                (int moveToIndex, Block? moveTo) = blocks.Index().FirstOrDefault(x => 
+                    x.Item.Index < toMove.Index
+                    && !x.Item.FileIndex.HasValue 
+                    && x.Item.Length >= toMove.Length
+                );
+                if (moveTo != null)
+                {
+                    if (moveTo.Length > toMove.Length)
+                    { 
+                        blocks.Insert(
+                            moveToIndex + 1,
+                            new Block(
+                                Index: moveTo.Index + toMove.Length, 
+                                Length: moveTo.Length -  toMove.Length,
+                                FileIndex: null,
+                                Moved: false
+                            )
+                        );
+                    }
+
+                    moveTo.FileIndex = toMove.FileIndex;
+                    moveTo.Length = toMove.Length;
+                    moveTo.Moved = true;
+
+                    toMove.FileIndex = null;
+                }    
+            }
+        }
+
+        List<int?> result = new List<int?>();
+        foreach (var block in blocks)
+        {
+            for (int i = 0; i < block.Length; ++i)
+            {
+                result.Add(block.FileIndex);
+            }
+        }
+        return result;
+    }
+
     private long GetChecksum(List<int?> representation)
     {
         long result = 0;
@@ -85,5 +149,13 @@ public class Day09 : BaseDay
             }
         }
         return result;
+    }
+
+    private class Block(int Index, int Length, int? FileIndex, bool Moved)
+    {
+        public int Index { get; set; } = Index;
+        public int Length { get; set; } = Length;
+        public int? FileIndex { get; set; } = FileIndex;
+        public bool Moved { get; set; } = Moved;
     }
 }
