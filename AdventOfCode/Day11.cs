@@ -9,7 +9,7 @@ public class Day11 : BaseDay
 
         for (int i = 0; i < 25; ++i)
         {
-            Blink(stones);
+            stones = Blink(stones);
         }
 
         return new(stones.Count.ToString());
@@ -17,31 +17,43 @@ public class Day11 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        List<Stone> stones = GetInput();
+
+        for (int i = 0; i < 35; ++i) // TODO make work for 75
+        {
+            stones = Blink(stones);
+        }
+
+        return new(stones.Count.ToString());
     }
 
-    private void Blink(List<Stone> stones)
+    private List<Stone> Blink(List<Stone> stones)
     {
+        List<Stone> result = new List<Stone>();
         for (int i = 0; i < stones.Count; i++)
         {
-            if (stones[i].Value == 0)
-            {
-                stones[i].Value++;
-            }
-            else if (stones[i].Value.ToString().Length % 2 == 0)
-            {
-                string stoneNumberString = stones[i].Value.ToString();
-                long one = long.Parse(stoneNumberString.Substring(0, stoneNumberString.Length / 2));
-                long two = long.Parse(stoneNumberString.Substring(stoneNumberString.Length / 2));
+            result.AddRange(Blink(stones[i]));
+        }
+        return result;
+    }
 
-                stones[i].Value = one;
-                stones.Insert(i + 1, new Stone(two));
-                i++;
-            }
-            else
-            {
-                stones[i].Value *= 2024;
-            }
+    private List<Stone> Blink(Stone stone)
+    {
+        if (stone.Value == 0)
+        {
+            return new List<Stone> { new Stone(1) };
+        }
+        else if (stone.Value.ToString().Length % 2 == 0)
+        {
+            string stoneNumberString = stone.Value.ToString();
+            long one = long.Parse(stoneNumberString.Substring(0, stoneNumberString.Length / 2));
+            long two = long.Parse(stoneNumberString.Substring(stoneNumberString.Length / 2));
+
+            return new List<Stone> { new Stone(one), new Stone(two) };
+        }
+        else
+        {
+            return new List<Stone> { new Stone(stone.Value * 2024) };
         }
     }
 
