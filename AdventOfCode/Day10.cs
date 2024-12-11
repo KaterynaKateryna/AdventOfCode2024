@@ -19,7 +19,7 @@ public class Day10 : BaseDay
             {
                 if (_map[i][j] == 0)
                 {
-                    totalScore += GetTrailheadScore(i, j);
+                    totalScore += GetTrailheadScore(i, j, getRating: false);
                 }
             }
         }
@@ -29,16 +29,28 @@ public class Day10 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        int totalScore = 0;
+        for (int i = 0; i < _map.Length; ++i)
+        {
+            for (int j = 0; j < _map[0].Length; ++j)
+            {
+                if (_map[i][j] == 0)
+                {
+                    totalScore += GetTrailheadScore(i, j, getRating: true);
+                }
+            }
+        }
+
+        return new(totalScore.ToString());
     }
 
-    private int GetTrailheadScore(int i, int j)
+    private int GetTrailheadScore(int i, int j, bool getRating)
     {
         Point start = new Point(i, j);
-        return GetTrailheadScore(start, new HashSet<Point>() { start }, new HashSet<Point>());
+        return GetTrailheadScore(start, new HashSet<Point>() { start }, new HashSet<Point>(), getRating);
     }
 
-    private int GetTrailheadScore(Point current, HashSet<Point> visited, HashSet<Point> ninePositionsreached)
+    private int GetTrailheadScore(Point current, HashSet<Point> visited, HashSet<Point> ninePositionsreached, bool getRating)
     {
         int currentValue = _map[current.I][current.J];
         if (currentValue == 9)
@@ -47,7 +59,7 @@ public class Day10 : BaseDay
             {
                 return 1;
             }
-            return 0;
+            return getRating ? 1 : 0;
         }
 
         int score = 0;
@@ -57,7 +69,7 @@ public class Day10 : BaseDay
             if (neighbour != null && _map[neighbour.I][neighbour.J] == currentValue + 1)
             {
                 visited.Add(neighbour);
-                score += GetTrailheadScore(neighbour, visited, ninePositionsreached);
+                score += GetTrailheadScore(neighbour, visited, ninePositionsreached, getRating);
                 visited.Remove(neighbour);
             }
         }
