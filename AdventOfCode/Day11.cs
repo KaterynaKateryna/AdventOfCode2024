@@ -1,11 +1,10 @@
-﻿
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day11 : BaseDay
 {
     public override ValueTask<string> Solve_1()
     {
-        List<Stone> stones = GetInput();
+        List<long> stones = GetInput();
 
         for (int i = 0; i < 25; ++i)
         {
@@ -17,7 +16,7 @@ public class Day11 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        List<Stone> stones = GetInput();
+        List<long> stones = GetInput();
 
         for (int i = 0; i < 35; ++i) // TODO make work for 75
         {
@@ -27,9 +26,9 @@ public class Day11 : BaseDay
         return new(stones.Count.ToString());
     }
 
-    private List<Stone> Blink(List<Stone> stones)
+    private List<long> Blink(List<long> stones)
     {
-        List<Stone> result = new List<Stone>();
+        List<long> result = new List<long>();
         for (int i = 0; i < stones.Count; i++)
         {
             result.AddRange(Blink(stones[i]));
@@ -37,36 +36,31 @@ public class Day11 : BaseDay
         return result;
     }
 
-    private List<Stone> Blink(Stone stone)
+    private List<long> Blink(long stone)
     {
-        if (stone.Value == 0)
+        if (stone == 0)
         {
-            return new List<Stone> { new Stone(1) };
+            return new List<long> { 1L };
         }
-        else if (stone.Value.ToString().Length % 2 == 0)
+        else if (stone.ToString().Length % 2 == 0)
         {
-            string stoneNumberString = stone.Value.ToString();
+            string stoneNumberString = stone.ToString();
             long one = long.Parse(stoneNumberString.Substring(0, stoneNumberString.Length / 2));
             long two = long.Parse(stoneNumberString.Substring(stoneNumberString.Length / 2));
 
-            return new List<Stone> { new Stone(one), new Stone(two) };
+            return new List<long> { one, two };
         }
         else
         {
-            return new List<Stone> { new Stone(stone.Value * 2024) };
+            return new List<long> { stone * 2024L };
         }
     }
 
-    private List<Stone> GetInput()
+    private List<long> GetInput()
     { 
         return File.ReadAllText(InputFilePath)
             .Split(" ", StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => new Stone(long.Parse(x)))
+            .Select(long.Parse)
             .ToList();
-    }
-
-    private class Stone(long Value)
-    {
-        public long Value { get; set; } = Value;
     }
 }
