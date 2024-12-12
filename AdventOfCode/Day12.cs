@@ -154,97 +154,52 @@ public class Day12 : BaseDay
     private bool CanReachHorizontally(Point point, PointSide existing, Side side)
     {
         char value = _input[point.I][point.J];
-        if (point.J < existing.Point.J)
+        int j = point.J;
+
+        while (j != existing.Point.J)
         {
-            for (int j= point.J + 1; j < existing.Point.J; ++j)
+            if (_input[point.I][j] != value)
             {
-                if (_input[point.I][j] != value)
-                {
-                    return false;
-                }
-                if (side == Side.Top && point.I != 0 && _input[point.I - 1][j] == value)
-                {
-                    return false;
-                }
-                if (side == Side.Bottom && point.I != _input.Length - 1 && _input[point.I + 1][j] == value)
-                {
-                    return false;
-                }
+                return false;
+            }
+            if (side == Side.Top && point.I != 0 && _input[point.I - 1][j] == value)
+            {
+                return false;
+            }
+            if (side == Side.Bottom && point.I != _input.Length - 1 && _input[point.I + 1][j] == value)
+            {
+                return false;
             }
 
-            return true;
+            j += j < existing.Point.J ? 1 : -1; 
         }
 
-        if (point.J > existing.Point.J)
-        {
-            for (int j = point.J - 1; j > existing.Point.J; --j)
-            {
-                if (_input[point.I][j] != value)
-                {
-                    return false;
-                }
-                if (side == Side.Top && point.I != 0 && _input[point.I - 1][j] == value)
-                {
-                    return false;
-                }
-                if (side == Side.Bottom && point.I != _input.Length - 1 && _input[point.I + 1][j] == value)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        throw new Exception();
+        return true;
     }
 
     private bool CanReachVertically(Point point, PointSide existing, Side side)
     {
         char value = _input[point.I][point.J];
-        if (point.I < existing.Point.I)
+        int i = point.I;
+        while (i != existing.Point.I)
         {
-            for (int i = point.I + 1; i < existing.Point.I; ++i)
+            if (_input[i][point.J] != value)
             {
-                if (_input[i][point.J] != value)
-                {
-                    return false;
-                }
-                if (side == Side.Left && point.J != 0 && _input[i][point.J - 1] == value)
-                {
-                    return false;
-                }
-                if (side == Side.Right && point.J != _input[i].Length - 1 && _input[i][point.J + 1] == value)
-                {
-                    return false;
-                }
+                return false;
+            }
+            if (side == Side.Left && point.J != 0 && _input[i][point.J - 1] == value)
+            {
+                return false;
+            }
+            if (side == Side.Right && point.J != _input[i].Length - 1 && _input[i][point.J + 1] == value)
+            {
+                return false;
             }
 
-            return true;
+            i += i < existing.Point.I ? 1 : -1;
         }
 
-        if (point.I > existing.Point.I)
-        {
-            for (int i = point.I - 1; i > existing.Point.I; --i)
-            {
-                if (_input[i][point.J] != value)
-                {
-                    return false;
-                }
-                if (side == Side.Left && point.J != 0 && _input[i][point.J - 1] == value)
-                {
-                    return false;
-                }
-                if (side == Side.Right && point.J != _input[i].Length - 1 && _input[i][point.J + 1] == value)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        throw new Exception();
+        return true;
     }
 
     private Point? GetNextNotVisited(bool[][] visited)
