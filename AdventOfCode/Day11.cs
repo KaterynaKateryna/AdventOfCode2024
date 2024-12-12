@@ -18,12 +18,11 @@ public class Day11 : BaseDay
     {
         List<long> stones = GetInput();
 
-        for (int i = 0; i < 35; ++i) // TODO make work for 75
-        {
-            stones = Blink(stones);
-        }
+        Dictionary<long,Dictionary<int, long>> cache = new Dictionary<long, Dictionary<int, long>>();
 
-        return new(stones.Count.ToString());
+        long result = BlinkRecursive(stones, 75, cache);
+
+        return new(result.ToString());
     }
 
     private List<long> Blink(List<long> stones)
@@ -71,18 +70,26 @@ public class Day11 : BaseDay
 
     #region recursive
 
-    private long BlinkRecursive(List<long> stones, int times)
+    private long BlinkRecursive(List<long> stones, int times, Dictionary<long, Dictionary<int, long>> cache)
     {
         long result = 0;
         for (int i = 0; i < stones.Count; i++)
         {
-            result += BlinkRecursive(stones[i], times);
+            result += BlinkRecursive(stones[i], times, cache);
         }
         return result;
     }
 
-    private long BlinkRecursive(long stone, int times)
+    private long BlinkRecursive(long stone, int times, Dictionary<long, Dictionary<int, long>> cache)
     {
+        if (cache.TryGetValue(stone, out var hits))
+        {
+            if (hits.TryGetValue(times, out long cachedResult))
+            { 
+                return cachedResult;
+            }
+        }
+
         (long a, long? b) = Blink(stone);
 
         if (times == 1)
@@ -90,11 +97,15 @@ public class Day11 : BaseDay
             return b.HasValue ? 2 : 1;
         }
 
-        long result = BlinkRecursive(a, times - 1);
+        long result = BlinkRecursive(a, times - 1, cache);
         if (b.HasValue)
         {
-            result += BlinkRecursive(b.Value, times - 1);
+            result += BlinkRecursive(b.Value, times - 1, cache);
         }
+
+        cache.TryAdd(stone, new Dictionary<int, long>());
+        cache[stone][times] = result;
+
         return result;
     }
 
