@@ -4,10 +4,10 @@ namespace AdventOfCode;
 
 public class Day13 : BaseDay
 {
-    private readonly List<ClawMachine> _clawMachines = new List<ClawMachine>();
-
-    public Day13() 
+    private List<ClawMachine> Init(long offset)
     {
+        List<ClawMachine> clawMachines = new List<ClawMachine>();
+
         string[] lines = File.ReadAllLines(InputFilePath);
 
         Button? a = null, b = null;
@@ -36,36 +36,45 @@ public class Day13 : BaseDay
             else if (line.StartsWith("Prize"))
             {
                 Match match = Regex.Match(line, "Prize: X=([0-9]+), Y=([0-9]+)");
-                int x = int.Parse(match.Groups[1].Value);
-                int y = int.Parse(match.Groups[2].Value);
+                long x = int.Parse(match.Groups[1].Value) + offset;
+                long y = int.Parse(match.Groups[2].Value) + offset;
                 prize = new Prize(x, y);
 
-                _clawMachines.Add(new ClawMachine(a!, b!, prize));
+                clawMachines.Add(new ClawMachine(a!, b!, prize));
             }
         }
+
+        return clawMachines;
     }
 
     public override ValueTask<string> Solve_1()
     {
-        int price = 0;
-        foreach (var clawMachine in _clawMachines)
+        return new(Solve(0).ToString());
+    }
+
+    public override ValueTask<string> Solve_2()
+    {
+        return new(Solve(10000000000000).ToString());
+    }
+
+    private long Solve(long offset)
+    {
+        List<ClawMachine> clawMachines = Init(offset);
+
+        long price = 0;
+        foreach (var clawMachine in clawMachines)
         {
-            (int? aMoves, int? bMoves) = GetSolution(clawMachine);
+            (long? aMoves, long? bMoves) = GetSolution(clawMachine);
             if (aMoves.HasValue && bMoves.HasValue)
             {
                 price += GetPrice(aMoves.Value, bMoves.Value);
             }
         }
 
-        return new(price.ToString());
+        return price;
     }
 
-    public override ValueTask<string> Solve_2()
-    {
-        return new("");
-    }
-
-    private (int? aMoves, int? bMoves) GetSolution(ClawMachine c)
+    private (long? aMoves, long? bMoves) GetSolution(ClawMachine c)
     {
          bool bSolutionExists = (c.ButtonA.Y * c.Prize.X - c.Prize.Y * c.ButtonA.X) 
             % (c.ButtonA.Y * c.ButtonB.X - c.ButtonA.X * c.ButtonB.Y) == 0;
@@ -75,7 +84,7 @@ public class Day13 : BaseDay
             return (null, null);
         }
 
-        int bMoves = (c.ButtonA.Y * c.Prize.X - c.Prize.Y * c.ButtonA.X)
+        long bMoves = (c.ButtonA.Y * c.Prize.X - c.Prize.Y * c.ButtonA.X)
             / (c.ButtonA.Y * c.ButtonB.X - c.ButtonA.X * c.ButtonB.Y);
 
         bool aSolutionExists = (c.Prize.Y - c.ButtonB.Y * bMoves) % c.ButtonA.Y == 0;
@@ -85,19 +94,19 @@ public class Day13 : BaseDay
             return (null, null);
         }
 
-        int aMoves = (c.Prize.Y - c.ButtonB.Y * bMoves) / c.ButtonA.Y;
+        long aMoves = (c.Prize.Y - c.ButtonB.Y * bMoves) / c.ButtonA.Y;
 
         return (aMoves, bMoves);
     }
 
-    private int GetPrice(int aMoves, int bMoves)
+    private long GetPrice(long aMoves, long bMoves)
     { 
         return aMoves * 3 + bMoves;
     }
 
     private record Button(int X, int Y);
 
-    private record Prize(int X, int Y);
+    private record Prize(long X, long Y);
 
     private record ClawMachine(Button ButtonA, Button ButtonB, Prize Prize);
 }
