@@ -1,34 +1,30 @@
 ﻿
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AdventOfCode;
 
 public class Day14 : BaseDay
 {
-    List<Robot> _robots = new List<Robot>();
-
-    public Day14()
-    {
-        string[] lines = File.ReadAllLines(InputFilePath);
-        _robots = lines.Select(Robot.Parse).ToList();
-    }
-
     public override ValueTask<string> Solve_1()
     {
+        string[] lines = File.ReadAllLines(InputFilePath);
+        List<Robot> robots = lines.Select(Robot.Parse).ToList();
+
         int width = 101;
         int height = 103;
         for (int i = 0; i < 100; i++)
         {
-            foreach (Robot robot in _robots)
+            foreach (Robot robot in robots)
             {
                 robot.Move(width, height);
             }
         }
 
-        int quadrant1 = GetRobotsCount(0, width / 2 - 1, 0, height / 2 - 1);
-        int quadrant2 = GetRobotsCount(width / 2 + 1, width - 1, 0, height / 2 - 1);
-        int quadrant3 = GetRobotsCount(0, width / 2 - 1, height / 2 + 1, height - 1);
-        int quadrant4 = GetRobotsCount(width / 2 + 1, width - 1, height / 2 + 1, height - 1);
+        int quadrant1 = GetRobotsCount(0, width / 2 - 1, 0, height / 2 - 1, robots);
+        int quadrant2 = GetRobotsCount(width / 2 + 1, width - 1, 0, height / 2 - 1, robots);
+        int quadrant3 = GetRobotsCount(0, width / 2 - 1, height / 2 + 1, height - 1, robots);
+        int quadrant4 = GetRobotsCount(width / 2 + 1, width - 1, height / 2 + 1, height - 1, robots);
 
         int result = quadrant1 * quadrant2 * quadrant3 * quadrant4;
 
@@ -37,13 +33,45 @@ public class Day14 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
+        string[] lines = File.ReadAllLines(InputFilePath);
+        List<Robot> robots = lines.Select(Robot.Parse).ToList();
+
+        int width = 101;
+        int height = 103;
+
+        //while(true)
+        //{
+        //    foreach (Robot robot in robots)
+        //    {
+        //        robot.Move(width, height);
+        //    }
+        //}
+
+        //DisplayRobots(robots, width, height);
+
         return new("");
     }
 
-    private int GetRobotsCount(int xStart, int xEnd, int yStart, int yEnd)
+    private int GetRobotsCount(int xStart, int xEnd, int yStart, int yEnd, List<Robot> robots)
     { 
-        return _robots.Count(r => r.XPosition >= xStart && r.XPosition <= xEnd
+        return robots.Count(r => r.XPosition >= xStart && r.XPosition <= xEnd
             && r.YPosition >= yStart && r.YPosition <= yEnd);
+    }
+
+    private void DisplayRobots(List<Robot> robots, int width, int height)
+    {
+        Console.Clear();
+        Console.WriteLine("\x1b[3J");
+        for (int i = 0; i < height; i++)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < width; j++)
+            {
+                char ch = robots.Any(r => r.XPosition == j && r.YPosition == i) ? '*' : '.';
+                sb.Append(ch);
+            }
+            Console.WriteLine(sb.ToString());
+        }
     }
 
     public class Robot(int XPosition, int YPosition, int XVelocity, int YVelocity)
