@@ -26,10 +26,10 @@ public class Day15 : BaseDay
 
             map[i] = characters;
 
-            int j = lines[i].IndexOf('@');
-            if (j >= 0)
+            bool hasRobot = map[i].Index().Any(x => x.Item == '@');
+            if (hasRobot)
             {
-                robot = new Position(i, j);
+                robot = new Position(i, map[i].Index().First(x => x.Item == '@').Index);
             }
         }
 
@@ -75,9 +75,14 @@ public class Day15 : BaseDay
     public override ValueTask<string> Solve_2()
     {
         (char[][] map, List<char> moves, Position robot) = Init(expand: true);
+
+        Display(map);
+        Task.Delay(200).Wait();
         foreach (char move in moves)
         {
             robot = MoveExpanded(move, robot, map);
+            Display(map);
+            Task.Delay(200).Wait();
         }
 
         int gps = GetGPS(map, '[');
@@ -143,17 +148,15 @@ public class Day15 : BaseDay
                     {
                         map[toReplace.Position.I][toReplace.Position.J] = '@';
                         map[toReplace.Previous.I][toReplace.Previous.J] = '.';
-                        return toReplace.Position;
+                        robot = toReplace.Position;
                     }
                     else
                     {
                         map[toReplace.Position.I][toReplace.Position.J] = map[toReplace.Previous.I][toReplace.Previous.J];
                     }
                 }
+                return robot;
             }
-
-            nextRow = nextRow.Select(n => new Node(GetNext(move, n.Position), n.Position)).ToList();
-            next.AddRange(nextRow);
 
             if (move == 'v' || move == '^')
             {
@@ -168,6 +171,9 @@ public class Day15 : BaseDay
                     nextRow.Add(new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J + 1), null));
                 }
             }
+
+            nextRow = nextRow.Select(n => new Node(GetNext(move, n.Position), n.Position)).ToList();
+            next.AddRange(nextRow);
         }
     }
 
@@ -220,6 +226,16 @@ public class Day15 : BaseDay
         }
 
         return result;
+    }
+
+    private void Display(char[][] map)
+    {
+        Console.Clear();
+        Console.WriteLine("\x1b[3J");
+        for (int i = 0; i < map.Length; i++)
+        {
+            Console.WriteLine(string.Join("", map[i]));
+        }
     }
 
     private record Position(int I, int J);
