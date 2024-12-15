@@ -39,23 +39,56 @@ public class Day14 : BaseDay
         int width = 101;
         int height = 103;
 
-        //while(true)
-        //{
-        //    foreach (Robot robot in robots)
-        //    {
-        //        robot.Move(width, height);
-        //    }
-        //}
+        int move = 0;
 
-        //DisplayRobots(robots, width, height);
+        while (true)
+        {
+            if (MayBeTree(robots, width, height))
+            {
+                DisplayRobots(robots, width, height);
+                Console.WriteLine("Seconds elapsed: " + move);
+                Console.WriteLine("Is it tree? y/n");
+                var key = Console.ReadKey();
+                if (key.KeyChar == 'y')
+                {
+                    break;
+                }
+            }
 
-        return new("");
+            foreach (Robot robot in robots)
+            {
+                robot.Move(width, height);
+            }
+
+            move++;
+        }
+
+        return new(move.ToString());
     }
 
     private int GetRobotsCount(int xStart, int xEnd, int yStart, int yEnd, List<Robot> robots)
     { 
         return robots.Count(r => r.XPosition >= xStart && r.XPosition <= xEnd
             && r.YPosition >= yStart && r.YPosition <= yEnd);
+    }
+
+    private bool MayBeTree(List<Robot> robots, int width, int height)
+    {
+        foreach (Robot robot in robots)
+        {
+            bool a = robots.Any(r => r.XPosition == robot.XPosition + 1 && r.YPosition == robot.YPosition);
+            bool b = robots.Any(r => r.XPosition == robot.XPosition && r.YPosition == robot.YPosition + 1);
+            bool c = robots.Any(r => r.XPosition == robot.XPosition + 1 && r.YPosition == robot.YPosition + 1);
+            bool d = robots.Any(r => r.XPosition == robot.XPosition && r.YPosition == robot.YPosition + 2);
+            bool e = robots.Any(r => r.XPosition == robot.XPosition + 1 && r.YPosition == robot.YPosition + 2);
+
+            if (a && b && c && d && e)
+            { 
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void DisplayRobots(List<Robot> robots, int width, int height)
