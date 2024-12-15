@@ -2,7 +2,7 @@
 
 public class Day15 : BaseDay
 {
-    private (char[][] map, List<char> moves, Position robot) Init()
+    private (char[][] map, List<char> moves, Position robot) Init(bool expand)
     {
         string[] lines = File.ReadAllLines(InputFilePath);
 
@@ -10,10 +10,21 @@ public class Day15 : BaseDay
         int width = lines[0].Length;
         int height = lines.Count(l => l.StartsWith("#"));
 
+        if (expand)
+        {
+            width *= 2;
+        }
+
         char[][] map = new char[height][];
         for (int i = 0; i < height; ++i)
         {
-            map[i] = lines[i].ToCharArray();
+            char[] characters = lines[i].ToCharArray();
+            if (expand)
+            {
+                characters = string.Join("", characters.Select(c => Expand(c))).ToCharArray();
+            }
+
+            map[i] = characters;
 
             int j = lines[i].IndexOf('@');
             if (j >= 0)
@@ -31,22 +42,46 @@ public class Day15 : BaseDay
         return (map, moves, robot);
     }
 
+    private string Expand(char c)
+    {
+        switch (c) 
+        {
+            case '#':
+                return "##";
+            case 'O':
+                return "[]";
+            case '.':
+                return "..";
+            case '@':
+                return "@.";
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
     public override ValueTask<string> Solve_1()
     {
-        (char[][] map, List<char> moves, Position robot) = Init();
+        (char[][] map, List<char> moves, Position robot) = Init(expand: false);
         foreach (char move in moves)
         {
             robot = Move(move, robot, map);
         }
 
-        int gps = GetGPS(map);
+        int gps = GetGPS(map, 'O');
 
         return new(gps.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        (char[][] map, List<char> moves, Position robot) = Init(expand: true);
+        foreach (char move in moves)
+        {
+            robot = MoveExpanded(move, robot, map);
+        }
+
+        int gps = GetGPS(map, '[');
+        return new(gps.ToString());
     }
 
     private Position Move(char move, Position robot, char[][] map)
@@ -82,6 +117,60 @@ public class Day15 : BaseDay
         }
     }
 
+    private Position MoveExpanded(char move, Position robot, char[][] map)
+    {
+        List<Node> next = new List<Node> { new Node (GetNext(move, robot), robot) };
+        List<Node> nextRow = next;
+
+        while (true)
+        {
+            List<char> nextRowChars = nextRow.Select(n => map[n.Position.I][n.Position.J]).ToList();
+
+            if (nextRowChars.Any(c => c == '#'))
+            {
+                return robot; // wall = do nothing
+            }
+            if (nextRowChars.All(c => c == '.'))
+            {
+                for (int i = next.Count - 1; i >= 0; i--)
+                {
+                    Node toReplace = next[i];
+                    if (toReplace.Previous == null)
+                    {
+                        map[toReplace.Position.I][toReplace.Position.J] = '.';
+                    }
+                    else if (toReplace.Previous == robot)
+                    {
+                        map[toReplace.Position.I][toReplace.Position.J] = '@';
+                        map[toReplace.Previous.I][toReplace.Previous.J] = '.';
+                        return toReplace.Position;
+                    }
+                    else
+                    {
+                        map[toReplace.Position.I][toReplace.Position.J] = map[toReplace.Previous.I][toReplace.Previous.J];
+                    }
+                }
+            }
+
+            nextRow = nextRow.Select(n => new Node(GetNext(move, n.Position), n.Position)).ToList();
+            next.AddRange(nextRow);
+
+            if (move == 'v' || move == '^')
+            {
+                char first = map[nextRow.First().Position.I][nextRow.First().Position.J];
+                char last = map[nextRow.Last().Position.I][nextRow.Last().Position.J];
+                if (first == ']')
+                {
+                    nextRow.Insert(0, new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J - 1), null));
+                }
+                if (last == '[')
+                {
+                    nextRow.Add(new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J + 1), null));
+                }
+            }
+        }
+    }
+
     private Position GetNext(char move, Position from)
     {
         switch (move)
@@ -99,14 +188,31 @@ public class Day15 : BaseDay
         }
     }
 
-    private int GetGPS(char[][] map)
+    private Position GetPrevious(char move, Position from)
+    {
+        switch (move)
+        {
+            case '^':
+                return new Position(from.I + 1, from.J);
+            case 'v':
+                return new Position(from.I - 1, from.J);
+            case '>':
+                return new Position(from.I, from.J - 1);
+            case '<':
+                return new Position(from.I, from.J + 1);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private int GetGPS(char[][] map, char box)
     {
         int result = 0;
         for (int i = 0; i < map.Length; ++i)
         {
             for (int j = 0; j < map[i].Length; ++j)
             {
-                if (map[i][j] == 'O')
+                if (map[i][j] == box)
                 {
                     result += 100 * i + j;
                 }
@@ -117,4 +223,6 @@ public class Day15 : BaseDay
     }
 
     private record Position(int I, int J);
+
+    private record Node(Position Position, Position? Previous);
 }
