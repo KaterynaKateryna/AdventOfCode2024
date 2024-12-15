@@ -1,45 +1,45 @@
-﻿
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day15 : BaseDay
 {
-    private readonly char[][] _map;
-    private readonly List<char> _moves = new List<char>();
-    private Position _robot;
-
-    public Day15()
-    { 
+    private (char[][] map, List<char> moves, Position robot) Init()
+    {
         string[] lines = File.ReadAllLines(InputFilePath);
 
+        Position robot = default!;
         int width = lines[0].Length;
         int height = lines.Count(l => l.StartsWith("#"));
 
-        _map = new char[height][];
+        char[][] map = new char[height][];
         for (int i = 0; i < height; ++i)
         {
-            _map[i] = lines[i].ToCharArray();
+            map[i] = lines[i].ToCharArray();
 
             int j = lines[i].IndexOf('@');
             if (j >= 0)
             {
-                _robot = new Position(i, j);
+                robot = new Position(i, j);
             }
         }
 
+        List<char> moves = new List<char>();
         foreach (var line in lines.Skip(height + 1))
         {
-            _moves.AddRange(line.ToList());
+            moves.AddRange(line.ToList());
         }
+
+        return (map, moves, robot);
     }
 
     public override ValueTask<string> Solve_1()
     {
-        foreach (char move in _moves)
+        (char[][] map, List<char> moves, Position robot) = Init();
+        foreach (char move in moves)
         {
-            Move(move);
+            robot = Move(move, robot, map);
         }
 
-        int gps = GetGPS();
+        int gps = GetGPS(map);
 
         return new(gps.ToString());
     }
@@ -49,30 +49,30 @@ public class Day15 : BaseDay
         return new("");
     }
 
-    private void Move(char move)
+    private Position Move(char move, Position robot, char[][] map)
     {
-        Position next = GetNext(move, _robot);
+        Position next = GetNext(move, robot);
 
         Position firstNext = next;
         bool movesBoxes = false;
 
         while (true)
         {
-            char nextChar = _map[next.I][next.J];
+            char nextChar = map[next.I][next.J];
             if (nextChar == '#')
             {
-                return; // wall = do nothing
+                return robot; // wall = do nothing
             }
             if (nextChar == '.')
             {
                 if (movesBoxes)
                 {
-                    _map[next.I][next.J] = 'O';
+                    map[next.I][next.J] = 'O';
                 }
-                _map[firstNext.I][firstNext.J] = '@';
-                _map[_robot.I][_robot.J] = '.';
-                _robot = firstNext;
-                return;
+                map[firstNext.I][firstNext.J] = '@';
+                map[robot.I][robot.J] = '.';
+                robot = firstNext;
+                return robot;
             }
             if (nextChar == 'O')
             {
@@ -99,14 +99,14 @@ public class Day15 : BaseDay
         }
     }
 
-    private int GetGPS()
+    private int GetGPS(char[][] map)
     {
         int result = 0;
-        for (int i = 0; i < _map.Length; ++i)
+        for (int i = 0; i < map.Length; ++i)
         {
-            for (int j = 0; j < _map[i].Length; ++j)
+            for (int j = 0; j < map[i].Length; ++j)
             {
-                if (_map[i][j] == 'O')
+                if (map[i][j] == 'O')
                 {
                     result += 100 * i + j;
                 }
