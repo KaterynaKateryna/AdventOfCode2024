@@ -178,20 +178,23 @@ public class Day15 : BaseDay
 
             if (move == 'v' || move == '^')
             {
-                char first = map[nextRow.First().Position.I][nextRow.First().Position.J];
-                char last = map[nextRow.Last().Position.I][nextRow.Last().Position.J];
-                if (first == ']')
+                List<Node> add = new List<Node>();
+                foreach (Node n in nextRow)
                 {
-                    Node n = new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J - 1), null);
-                    nextRow.Insert(0, n);
-                    next.Add(n);
+                    char ch = map[n.Position.I][n.Position.J];
+                    if (ch == '[' && !nextRow.Any(n => n.Position == new Position(n.Position.I, n.Position.J + 1)))
+                    {
+                        add.Add(new Node(new Position(n.Position.I, n.Position.J + 1), null));
+                    }
+                    if (ch == ']' && !nextRow.Any(n => n.Position == new Position(n.Position.I, n.Position.J - 1)))
+                    {
+                        add.Add(new Node(new Position(n.Position.I, n.Position.J - 1), null));
+                    }
                 }
-                if (last == '[')
-                {
-                    Node n = new Node(new Position(nextRow.Last().Position.I, nextRow.Last().Position.J + 1), null);
-                    nextRow.Add(n);
-                    next.Add(n);
-                }
+
+                nextRow.AddRange(add);
+                next.AddRange(add);
+
             }
 
             nextRow = nextRow.Where(n => map[n.Position.I][n.Position.J] != '.')
