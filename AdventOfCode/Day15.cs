@@ -76,13 +76,16 @@ public class Day15 : BaseDay
     {
         (char[][] map, List<char> moves, Position robot) = Init(expand: true);
 
-        Display(map);
-        Task.Delay(200).Wait();
-        foreach (char move in moves)
+        for (int i = 0; i < moves.Count; ++i)
         {
-            robot = MoveExpanded(move, robot, map);
-            Display(map);
-            Task.Delay(200).Wait();
+            robot = MoveExpanded(moves[i], robot, map);
+
+            if (!AssertValid(map))
+            {
+                Display(map);
+                Console.WriteLine(i);
+                Console.ReadLine();
+            }
         }
 
         int gps = GetGPS(map, '[');
@@ -124,7 +127,22 @@ public class Day15 : BaseDay
 
     private Position MoveExpanded(char move, Position robot, char[][] map)
     {
-        List<Node> next = new List<Node> { new Node (GetNext(move, robot), robot) };
+        Position f = GetNext(move, robot);
+        List<Node> next = new List<Node> { new Node (f, robot) };
+
+        if (move == 'v' || move == '^')
+        {
+            char first = map[f.I][f.J];
+            if (first == ']')
+            {
+                next.Insert(0, new Node(new Position(f.I, f.J - 1), null));
+            }
+            if (first == '[')
+            {
+                next.Add(new Node(new Position(f.I, f.J + 1), null));
+            }
+        }
+
         List<Node> nextRow = next;
 
         while (true)
@@ -164,15 +182,20 @@ public class Day15 : BaseDay
                 char last = map[nextRow.Last().Position.I][nextRow.Last().Position.J];
                 if (first == ']')
                 {
-                    nextRow.Insert(0, new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J - 1), null));
+                    Node n = new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J - 1), null);
+                    nextRow.Insert(0, n);
+                    next.Add(n);
                 }
                 if (last == '[')
                 {
-                    nextRow.Add(new Node(new Position(nextRow.First().Position.I, nextRow.First().Position.J + 1), null));
+                    Node n = new Node(new Position(nextRow.Last().Position.I, nextRow.Last().Position.J + 1), null);
+                    nextRow.Add(n);
+                    next.Add(n);
                 }
             }
 
-            nextRow = nextRow.Select(n => new Node(GetNext(move, n.Position), n.Position)).ToList();
+            nextRow = nextRow.Where(n => map[n.Position.I][n.Position.J] != '.')
+                .Select(n => new Node(GetNext(move, n.Position), n.Position)).ToList();
             next.AddRange(nextRow);
         }
     }
@@ -236,6 +259,25 @@ public class Day15 : BaseDay
         {
             Console.WriteLine(string.Join("", map[i]));
         }
+    }
+
+    private bool AssertValid(char[][] map)
+    {
+        for (int i = 0; i < map.Length; ++i)
+        {
+            for (int j = 0; j < map[i].Length; ++j)
+            {
+                if (map[i][j] == '[' && map[i][j + 1] != ']')
+                {
+                    return false;
+                }
+                if (map[i][j] == ']' && map[i][j - 1] != '[')
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private record Position(int I, int J);
