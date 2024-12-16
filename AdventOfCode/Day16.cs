@@ -58,7 +58,33 @@ internal class Day16 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        (char[][] map, Position start, Position end) = Init();
+
+        long[][] costs = new long[map.Length][];
+        for (int i = 0; i < map.Length; ++i)
+        {
+            costs[i] = new long[map[i].Length];
+            for (int j = 0; j < map[i].Length; ++j)
+            {
+                if (i == start.I && j == start.J)
+                {
+                    costs[i][j] = 0;
+                }
+                else
+                {
+                    costs[i][j] = long.MaxValue;
+                }
+            }
+        }
+
+        GetCost(map, costs, start, 0, end, Direction.East);
+        DisplayCosts(costs);
+        long finalCost = costs[end.I][end.J];
+
+        List<Position> paths = GetPath(map, costs, start, 0, end, Direction.East, new List<Position>() { start }, finalCost);
+        long path = paths.Distinct().Count();
+
+        return new(path.ToString());
     }
 
     private void GetCost(char[][] map, long[][] costs, Position current, long currentCost, Position end, Direction direction)
@@ -79,27 +105,85 @@ internal class Day16 : BaseDay
             }
         }
 
-        Position clockwise = GetNext(current, RotateClockwise(direction));
+        Direction clockwiseDirection = RotateClockwise(direction);
+        Position clockwise = GetNext(current, clockwiseDirection);
         if (map[clockwise.I][clockwise.J] != '#')
         {
             if (currentCost + 1001 < costs[clockwise.I][clockwise.J])
             {
                 costs[clockwise.I][clockwise.J] = currentCost + 1001;
 
-                GetCost(map, costs, clockwise, currentCost + 1001, end, RotateClockwise(direction));
+                GetCost(map, costs, clockwise, currentCost + 1001, end, clockwiseDirection);
             }
         }
 
-        Position counter = GetNext(current, RotateCounterClockwise(direction));
+        Direction counterDirection = RotateCounterClockwise(direction);
+        Position counter = GetNext(current, counterDirection);
         if (map[counter.I][counter.J] != '#')
         {
             if (currentCost + 1001 < costs[counter.I][counter.J])
             {
                 costs[counter.I][counter.J] = currentCost + 1001;
 
-                GetCost(map, costs, counter, currentCost + 1001, end, RotateCounterClockwise(direction));
+                GetCost(map, costs, counter, currentCost + 1001, end, counterDirection);
             }
         }
+    }
+
+    private List<Position> GetPath(
+        char[][] map, 
+        long[][] costs,
+        Position current,
+        long currentCost,
+        Position end, 
+        Direction direction, 
+        List<Position> path,
+        long finalCost
+    )
+    {
+        if (current == end)
+        {
+            return path;
+        }
+
+        List<Position> positions = new List<Position>();
+
+        Position straight = GetNext(current, direction);
+        if (map[straight.I][straight.J] != '#')
+        {
+            if (currentCost + 1 <= finalCost)
+            {
+                path.Add(straight);
+                positions.AddRange(GetPath(map, costs, straight, currentCost + 1, end, direction, path, finalCost));
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+
+        Direction clockwiseDirection = RotateClockwise(direction);
+        Position clockwise = GetNext(current, clockwiseDirection);
+        if (map[clockwise.I][clockwise.J] != '#')
+        {
+            if (currentCost + 1001 <= finalCost)
+            {
+                path.Add(clockwise);
+                positions.AddRange(GetPath(map, costs, clockwise, currentCost + 1001, end, clockwiseDirection, path, finalCost));
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+
+        Direction counterDirection = RotateCounterClockwise(direction);
+        Position counter = GetNext(current, counterDirection);
+        if (map[counter.I][counter.J] != '#')
+        {
+            if (currentCost + 1001 <= finalCost)
+            {
+                path.Add(counter);
+                positions.AddRange(GetPath(map, costs, counter, currentCost + 1001, end, counterDirection, path, finalCost));
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+
+        return positions;
     }
 
     private Direction RotateClockwise(Direction direction)
@@ -150,6 +234,25 @@ internal class Day16 : BaseDay
                 return new Position(from.I, from.J - 1);
             default:
                 throw new NotImplementedException();
+        }
+    }
+
+    private void DisplayCosts(long[][] costs)
+    {
+        for (int i = 0; i < costs.Length; ++i)
+        {
+            for (int j = 0; j < costs[i].Length; ++j)
+            {
+                if (costs[i][j] == long.MaxValue)
+                {
+                    Console.Write("    max");
+                }
+                else
+                {
+                    Console.Write(String.Format("{0, 7}", costs[i][j]));
+                }
+            }
+            Console.WriteLine();
         }
     }
 
