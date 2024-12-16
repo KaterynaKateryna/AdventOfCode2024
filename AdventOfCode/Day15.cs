@@ -220,23 +220,6 @@ public class Day15 : BaseDay
         }
     }
 
-    private Position GetPrevious(char move, Position from)
-    {
-        switch (move)
-        {
-            case '^':
-                return new Position(from.I + 1, from.J);
-            case 'v':
-                return new Position(from.I - 1, from.J);
-            case '>':
-                return new Position(from.I, from.J - 1);
-            case '<':
-                return new Position(from.I, from.J + 1);
-            default:
-                throw new NotImplementedException();
-        }
-    }
-
     private int GetGPS(char[][] map, char box)
     {
         int result = 0;
