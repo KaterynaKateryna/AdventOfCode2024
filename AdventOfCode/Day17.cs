@@ -2,29 +2,53 @@
 
 public class Day17 : BaseDay
 {
-    private (long A, long B, long C, int[] instructions) Init()
+    private (long A, long B, long C, List<int> instructions) Init()
     {
         string[] lines = File.ReadAllLines(InputFilePath);
         long A = long.Parse(lines[0].Replace("Register A: ", ""));
         long B = long.Parse(lines[1].Replace("Register B: ", ""));
         long C = long.Parse(lines[2].Replace("Register C: ", ""));
 
-        int[] instructions = lines[4].Replace("Program: ", "")
+        List<int> instructions = lines[4].Replace("Program: ", "")
             .Split(",", StringSplitOptions.RemoveEmptyEntries)
             .Select(int.Parse)
-            .ToArray();
+            .ToList();
 
         return (A, B, C, instructions);
     }
 
     public override ValueTask<string> Solve_1()
     {
-        (long A, long B, long C, int[] instructions) = Init();
+        (long A, long B, long C, List<int> instructions) = Init();
 
+        (List<int> output, _) = RunProgram(A, B, C, instructions, returnOnWrong: false);
+
+        return new(string.Join(",", output));
+    }
+
+    public override ValueTask<string> Solve_2()
+    {
+        (long A, long B, long C, List<int> instructions) = Init();
+
+        int i = 0;
+        for (; i < 10000000; ++i)
+        {
+            (List<int> output, bool earlyReturn) = RunProgram(A, B, C, instructions, returnOnWrong: true);
+            if (!earlyReturn && Enumerable.SequenceEqual(instructions, output))
+            {
+                break;
+            }
+        }
+
+        return new(i.ToString());
+    }
+
+    private (List<int>, bool earlyReturn) RunProgram(long A, long B, long C, List<int> instructions, bool returnOnWrong)
+    {
         int index = 0;
-        List<long> output = new List<long>();
+        List<int> output = new List<int>();
 
-        while (index < instructions.Length - 1)
+        while (index < instructions.Count - 1)
         {
             switch (instructions[index])
             {
@@ -56,7 +80,12 @@ public class Day17 : BaseDay
                     index += 2;
                     continue;
                 case 5:
-                    output.Add(GetComboOperand(instructions[index + 1], A, B, C) % 8);
+                    int nxt = (int)(GetComboOperand(instructions[index + 1], A, B, C) % 8);
+                    if (returnOnWrong && instructions[output.Count] != nxt)
+                    {
+                        return (output, true);
+                    }
+                    output.Add(nxt);
                     index += 2;
                     continue;
                 case 6:
@@ -70,12 +99,7 @@ public class Day17 : BaseDay
             }
         }
 
-        return new(string.Join(",", output));
-    }
-
-    public override ValueTask<string> Solve_2()
-    {
-        return new("");
+        return (output, false);
     }
 
     private long GetComboOperand(int operand, long A, long B, long C)
