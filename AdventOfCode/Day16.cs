@@ -1,5 +1,4 @@
-﻿
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 internal class Day16 : BaseDay
 {
@@ -78,10 +77,12 @@ internal class Day16 : BaseDay
         }
 
         GetCost(map, costs, start, 0, end, Direction.East);
-        DisplayCosts(costs);
+        //DisplayCosts(costs);
         long finalCost = costs[end.I][end.J];
 
-        List<Position> paths = GetPath(map, costs, start, 0, end, Direction.East, new List<Position>() { start }, finalCost);
+        var stack = new Stack<Position>();
+        stack.Push(start);
+        List<Position> paths = GetPath(map, costs, start, 0, end, Direction.East, stack, finalCost);
         long path = paths.Distinct().Count();
 
         return new(path.ToString());
@@ -136,14 +137,14 @@ internal class Day16 : BaseDay
         Position current,
         long currentCost,
         Position end, 
-        Direction direction, 
-        List<Position> path,
+        Direction direction,
+        Stack<Position> path,
         long finalCost
     )
     {
         if (current == end)
         {
-            return path;
+            return path.ToList();
         }
 
         List<Position> positions = new List<Position>();
@@ -151,11 +152,11 @@ internal class Day16 : BaseDay
         Position straight = GetNext(current, direction);
         if (map[straight.I][straight.J] != '#')
         {
-            if (currentCost + 1 <= finalCost)
+            if (currentCost + 1 <= finalCost && currentCost + 1 <= costs[straight.I][straight.J] + 1000 && !path.Contains(straight))
             {
-                path.Add(straight);
+                path.Push(straight);
                 positions.AddRange(GetPath(map, costs, straight, currentCost + 1, end, direction, path, finalCost));
-                path.RemoveAt(path.Count - 1);
+                path.Pop();
             }
         }
 
@@ -163,11 +164,11 @@ internal class Day16 : BaseDay
         Position clockwise = GetNext(current, clockwiseDirection);
         if (map[clockwise.I][clockwise.J] != '#')
         {
-            if (currentCost + 1001 <= finalCost)
+            if (currentCost + 1001 <= finalCost && currentCost + 1001 <= costs[clockwise.I][clockwise.J] + 1000 && !path.Contains(clockwise))
             {
-                path.Add(clockwise);
+                path.Push(clockwise);
                 positions.AddRange(GetPath(map, costs, clockwise, currentCost + 1001, end, clockwiseDirection, path, finalCost));
-                path.RemoveAt(path.Count - 1);
+                path.Pop();
             }
         }
 
@@ -175,11 +176,11 @@ internal class Day16 : BaseDay
         Position counter = GetNext(current, counterDirection);
         if (map[counter.I][counter.J] != '#')
         {
-            if (currentCost + 1001 <= finalCost)
+            if (currentCost + 1001 <= finalCost && currentCost + 1001 <= costs[counter.I][counter.J] + 1000 && !path.Contains(counter))
             {
-                path.Add(counter);
+                path.Push(counter);
                 positions.AddRange(GetPath(map, costs, counter, currentCost + 1001, end, counterDirection, path, finalCost));
-                path.RemoveAt(path.Count - 1);
+                path.Pop();
             }
         }
 
