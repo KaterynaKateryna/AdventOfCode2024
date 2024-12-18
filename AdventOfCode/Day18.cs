@@ -2,35 +2,58 @@
 
 public class Day18 : BaseDay
 {
+    private readonly List<Position> _corrupted = new List<Position>();
+
+    public Day18()
+    {
+        string[] lines = File.ReadAllLines(InputFilePath);
+        for (int i = 0; i < lines.Length; ++i)
+        {
+            string[] parts = lines[i].Split(",", StringSplitOptions.RemoveEmptyEntries);
+            int corruptedI = int.Parse(parts[1]);
+            int corruptedJ = int.Parse(parts[0]);
+
+            _corrupted.Add(new Position(corruptedI, corruptedJ));
+        }
+    }
+
     public override ValueTask<string> Solve_1()
     {
-        (char[][] map, Position start, Position end) = Init(71);
+        int length = 71;
+        (char[][] map, Position start, Position end) = Init(length, 1024);
+        long[][] costs = InitCosts(length, start);
 
-        long[][] costs = new long[map.Length][];
-        for (int i = 0; i < map.Length; ++i)
-        {
-            costs[i] = new long[map[i].Length];
-            for (int j = 0; j < map[i].Length; ++j)
-            {
-                if (i == start.I && j == start.J)
-                {
-                    costs[i][j] = 0;
-                }
-                else
-                {
-                    costs[i][j] = long.MaxValue;
-                }
-            }
-        }
-
-        GetCost(map, costs, start, 0, end, Direction.East, map.Length);
+        GetCost(map, costs, start, 0, end, Direction.East, length);
 
         long cost = costs[end.I][end.J];
 
         return new(cost.ToString());
     }
 
-    private (char[][] map, Position start, Position end) Init(int length)
+    public override ValueTask<string> Solve_2()
+    {
+        int length = 71;
+        (char[][] map, Position start, Position end) = Init(length, _corrupted.Count);
+
+        int i = _corrupted.Count - 1;
+        for (; i >= 0; --i)
+        {
+            map[_corrupted[i].I][_corrupted[i].J] = '.';
+
+            long[][] costs = InitCosts(length, start);
+            GetCost(map, costs, start, 0, end, Direction.East, length);
+
+            long cost = costs[end.I][end.J];
+            if (cost != long.MaxValue)
+            {
+                break;
+            }
+        }
+
+        return new($"{_corrupted[i].J},{_corrupted[i].I}");
+    }
+
+    private (char[][] map, Position start, Position end) Init(int length, int corrupted)
     {
         char[][] map = new char[length][];
         for (int i = 0; i < map.Length; ++i)
@@ -42,22 +65,33 @@ public class Day18 : BaseDay
             }
         }
 
-        string[] lines = File.ReadAllLines(InputFilePath);
-        for (int i = 0; i < 1024; ++i)
+        for (int i = 0; i < corrupted; ++i)
         {
-            string[] parts = lines[i].Split(",", StringSplitOptions.RemoveEmptyEntries);
-            int corruptedI = int.Parse(parts[1]);
-            int corruptedJ = int.Parse(parts[0]);
-
-            map[corruptedI][corruptedJ] = '#';
+            map[_corrupted[i].I][_corrupted[i].J] = '#';
         }
 
         return (map, new Position(0, 0), new Position(70, 70));
     }
 
-    public override ValueTask<string> Solve_2()
+    private long[][] InitCosts(int length, Position start)
     {
-        return new("");
+        long[][] costs = new long[length][];
+        for (int i = 0; i < length; ++i)
+        {
+            costs[i] = new long[length];
+            for (int j = 0; j < length; ++j)
+            {
+                if (i == start.I && j == start.J)
+                {
+                    costs[i][j] = 0;
+                }
+                else
+                {
+                    costs[i][j] = long.MaxValue;
+                }
+            }
+        }
+        return costs;
     }
 
     private void GetCost(char[][] map, long[][] costs, Position current, long currentCost, Position end, Direction direction, int maxSize)
