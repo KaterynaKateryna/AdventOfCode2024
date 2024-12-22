@@ -34,18 +34,26 @@ public class Day20 : BaseDay
 
     public override ValueTask<string> Solve_1()
     {
+        Direction startingDirection = Direction.South;
         (char[][] map, int[][] distances, Position start, Position end) = Init();
 
-        CalculateDistances(map, distances, start, 0, end, Direction.South);
+        CalculateDistances(map, distances, start, 0, end, startingDirection);
 
-        int cheats = CalculateCheats(map, distances, start, end, Direction.South);
+        int cheats = CalculateCheats(map, distances, start, end, startingDirection);
 
         return new(cheats.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
-        return new("");
+        Direction startingDirection = Direction.South;
+        (char[][] map, int[][] distances, Position start, Position end) = Init();
+
+        CalculateDistances(map, distances, start, 0, end, startingDirection);
+
+        int cheats = CalculateCheats2(map, distances, start, end, startingDirection);
+
+        return new(cheats.ToString());
     }
 
     private void CalculateDistances(
@@ -116,7 +124,100 @@ public class Day20 : BaseDay
         return cheats;
     }
 
+    private int CalculateCheats2(
+        char[][] map,
+        int[][] distances,
+        Position start,
+        Position end,
+        Direction direction
+    )
+    {
+        int cheats = 0;
+        Position current = start;
+        while (current != end)
+        {
+            (Position next, Direction newDirection) = GetNext(map, current, direction, map.Length, map[0].Length);
 
+            cheats += CountCheatsFromPosition(map, distances, current, direction, next, newDirection);
+         
+            current = next;
+            direction = newDirection;
+        }
+
+        return cheats;
+    }
+
+    private int CountCheatsFromPosition(
+        char[][] map,
+        int[][] distances,
+        Position current,
+        Direction direction,
+        Position next, 
+        Direction nextDirection
+    )
+    {
+        HashSet<Position> cheatPositions = new HashSet<Position>();
+        Dictionary<Position, int> visitedWithDistance = new Dictionary<Position, int>();
+
+        Direction fromDirection = GetOpposite(direction);
+        for (int i = 0; i < 4; ++i)
+        {
+            Direction d = (Direction)i;
+
+            if (d == nextDirection || d == fromDirection)
+            {
+                continue;
+            }
+
+            Position? nxtCheat = GetNextInDirection(current, d, map.Length, map[0].Length);
+            if (nxtCheat != null && map[nxtCheat.I][nxtCheat.J] == '#')
+            {
+                visitedWithDistance[nxtCheat] = 1;
+            }
+        }
+
+        while (visitedWithDistance.Count > 0)
+        {
+            KeyValuePair<Position, int> toCheck = visitedWithDistance.First();
+            visitedWithDistance.Remove(toCheck.Key);
+
+            if (map[toCheck.Key.I][toCheck.Key.J] != '#')
+            {
+                int originalDistance = distances[toCheck.Key.I][toCheck.Key.J];
+                int cheatDistance = distances[current.I][current.J] + toCheck.Value;
+                if (originalDistance - cheatDistance >= 100)
+                {
+                    cheatPositions.Add(toCheck.Key);
+                }
+            }
+            else if (toCheck.Value < 20)
+            {
+                Position? a = GetNextInDirection(toCheck.Key, Direction.West, map.Length, map[0].Length);
+                Position? b = GetNextInDirection(toCheck.Key, Direction.East, map.Length, map[0].Length);
+                Position? c = GetNextInDirection(toCheck.Key, Direction.North, map.Length, map[0].Length);
+                Position? d = GetNextInDirection(toCheck.Key, Direction.South, map.Length, map[0].Length);
+
+                if (a != null && !visitedWithDistance.ContainsKey(a))
+                {
+                    visitedWithDistance[a] = toCheck.Value + 1;
+                }
+                if (b != null && !visitedWithDistance.ContainsKey(b))
+                {
+                    visitedWithDistance[b] = toCheck.Value + 1;
+                }
+                if (c != null && !visitedWithDistance.ContainsKey(c))
+                {
+                    visitedWithDistance[c] = toCheck.Value + 1;
+                }
+                if (d != null && !visitedWithDistance.ContainsKey(d))
+                {
+                    visitedWithDistance[d] = toCheck.Value + 1;
+                }
+            }
+        }
+
+        return cheatPositions.Count;
+    }
 
     private Direction RotateClockwise(Direction direction)
     {
@@ -147,6 +248,23 @@ public class Day20 : BaseDay
                 return Direction.South;
             case Direction.North:
                 return Direction.West;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private Direction GetOpposite(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.East:
+                return Direction.West;
+            case Direction.South:
+                return Direction.North;
+            case Direction.West:
+                return Direction.East;
+            case Direction.North:
+                return Direction.South;
             default:
                 throw new NotImplementedException();
         }
