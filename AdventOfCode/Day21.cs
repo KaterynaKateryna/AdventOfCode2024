@@ -6,7 +6,7 @@ public class Day21 : BaseDay
 
     public Day21()
     {
-        _codes = ["029A", "980A", "179A", "456A", "379A"]; //File.ReadAllLines(InputFilePath);
+        _codes = File.ReadAllLines(InputFilePath);
     }
 
     public override ValueTask<string> Solve_1()
@@ -16,7 +16,7 @@ public class Day21 : BaseDay
         {
             int length = GetShortestPath(code);
             int num = int.Parse(code.Replace("A", ""));
-            Console.WriteLine($"{length} * {num}");
+            //Console.WriteLine($"{length} * {num}");
             res += length * num;
         }
 
@@ -31,7 +31,6 @@ public class Day21 : BaseDay
     private int GetShortestPath(string code)
     {
         List<string> one = GetAllPaths(code, _numpad, new Dictionary<(Position, Position), List<string>>());
-
 
         var cache = new Dictionary<(Position, Position), List<string>>();
 
@@ -76,7 +75,7 @@ public class Day21 : BaseDay
             }
             else 
             {
-                segments = GetAllPaths(from, to, "");
+                segments = GetAllPaths(from, to, "", pad);
                 cache[(from, to)] = segments;
             }
             
@@ -109,7 +108,7 @@ public class Day21 : BaseDay
             }
             else
             {
-                var segments = GetAllPaths(from, to, "");
+                var segments = GetAllPaths(from, to, "", pad);
                 lengthCache[(from, to)] = segments.Min(s => s.Length);
                 length += lengthCache[(from, to)];
                 length++; // A
@@ -124,7 +123,8 @@ public class Day21 : BaseDay
     private List<string> GetAllPaths(
         Position from, 
         Position to, 
-        string currentPath
+        string currentPath,
+        Dictionary<char, Position> pad
     )
     {
         List<string> paths = new List<string>();
@@ -134,21 +134,21 @@ public class Day21 : BaseDay
             return paths;
         }
 
-        if (from.I - to.I > 0)
+        if (from.I - to.I > 0 && pad.Values.Contains(new Position(from.I - 1, from.J)))
         {
-            paths.AddRange(GetAllPaths(new Position(from.I - 1, from.J), to, currentPath + "^"));
+            paths.AddRange(GetAllPaths(new Position(from.I - 1, from.J), to, currentPath + "^", pad));
         }
-        if (from.I - to.I < 0)
+        if (from.I - to.I < 0 && pad.Values.Contains(new Position(from.I + 1, from.J)))
         {
-            paths.AddRange(GetAllPaths(new Position(from.I + 1, from.J), to, currentPath + "V"));
+            paths.AddRange(GetAllPaths(new Position(from.I + 1, from.J), to, currentPath + "V", pad));
         }
-        if (from.J - to.J > 0)
+        if (from.J - to.J > 0 && pad.Values.Contains(new Position(from.I, from.J - 1)))
         {
-            paths.AddRange(GetAllPaths(new Position(from.I, from.J - 1), to, currentPath + "<"));
+            paths.AddRange(GetAllPaths(new Position(from.I, from.J - 1), to, currentPath + "<", pad));
         }
-        if (from.J - to.J < 0)
+        if (from.J - to.J < 0 && pad.Values.Contains(new Position(from.I, from.J + 1)))
         {
-            paths.AddRange(GetAllPaths(new Position(from.I, from.J + 1), to, currentPath + ">"));
+            paths.AddRange(GetAllPaths(new Position(from.I, from.J + 1), to, currentPath + ">", pad));
         }
 
         return paths;
