@@ -19,22 +19,28 @@ public class Day22 : BaseDay
     {
         long[] numbers = File.ReadAllLines(InputFilePath).Select(long.Parse).ToArray();
 
-
-        Dictionary<(int, int, int, int), int> bananas = new Dictionary<(int, int, int, int), int>();
+        Dictionary<(int, int, int, int), int> allBananas = new Dictionary<(int, int, int, int), int>();
         foreach (long n in numbers)
         {
+            Dictionary<(int, int, int, int), int> bananas = new Dictionary<(int, int, int, int), int>();
+
             (int, int)[] changes = GetPricesWithChanges(n, 2000);
 
             for (int i = 0; i < changes.Length - 3; ++i)
             {
-                if (!bananas.TryAdd((changes[i].Item2, changes[i+1].Item2, changes[i+2].Item2, changes[i+3].Item2), changes[i+3].Item1))
+                bananas.TryAdd((changes[i].Item2, changes[i + 1].Item2, changes[i + 2].Item2, changes[i + 3].Item2), changes[i + 3].Item1);
+            }
+
+            foreach(var kv in bananas)
+            {
+                if (!allBananas.TryAdd(kv.Key, kv.Value))
                 {
-                    bananas[(changes[i].Item2, changes[i + 1].Item2, changes[i + 2].Item2, changes[i + 3].Item2)] += changes[i + 3].Item1;
+                    allBananas[kv.Key] += kv.Value;
                 }
             }
         }
 
-        int max = bananas.Max(b => b.Value);
+        int max = allBananas.Max(b => b.Value);
 
         return new(max.ToString());
     }
