@@ -192,7 +192,8 @@ public class Day20 : BaseDay
                         cheatPositions.Add(toCheck.Position);
                     }
                 }
-                else if (toCheck.Distance < 20)
+                
+                if (toCheck.Distance < 20)
                 {
                     Position? a = GetNextInDirection(toCheck.Position, Direction.West, map.Length, map[0].Length);
                     Position? b = GetNextInDirection(toCheck.Position, Direction.East, map.Length, map[0].Length);
