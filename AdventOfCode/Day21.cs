@@ -41,10 +41,12 @@ public class Day21 : BaseDay
             two.AddRange(GetAllPaths(path, _directionalPad, cache));
         }
 
+        var lengthCache = cache.ToDictionary(x => x.Key, y => y.Value.Min(s => s.Length));
+
         int shortest = int.MaxValue;
         foreach (string path in two)
         {
-            var t = GetPathLength(path, _directionalPad, cache);
+            var t = GetPathLength(path, _directionalPad, lengthCache);
             if (t < shortest)
             {
                 shortest = t;
@@ -74,7 +76,7 @@ public class Day21 : BaseDay
             }
             else 
             {
-                segments = GetAllPaths(from, to, "", cache);
+                segments = GetAllPaths(from, to, "");
                 cache[(from, to)] = segments;
             }
             
@@ -90,7 +92,7 @@ public class Day21 : BaseDay
     private int GetPathLength(
         string code,
         Dictionary<char, Position> pad,
-        Dictionary<(Position, Position), List<string>> cache
+        Dictionary<(Position, Position), int> lengthCache
     )
     {
         Position from = pad['A'];
@@ -100,17 +102,17 @@ public class Day21 : BaseDay
         {
             Position to = pad[button];
 
-            if (cache.ContainsKey((from, to)))
+            if (lengthCache.ContainsKey((from, to)))
             {
-                length += cache[(from, to)][0].Length;
-                length++;
+                length += lengthCache[(from, to)];
+                length++; // A
             }
             else
             {
-                var segments = GetAllPaths(from, to, "", cache);
-                cache[(from, to)] = segments;
-                length += cache[(from, to)][0].Length;
-                length++;
+                var segments = GetAllPaths(from, to, "");
+                lengthCache[(from, to)] = segments.Min(s => s.Length);
+                length += lengthCache[(from, to)];
+                length++; // A
             }
 
             from = to;
@@ -122,8 +124,7 @@ public class Day21 : BaseDay
     private List<string> GetAllPaths(
         Position from, 
         Position to, 
-        string currentPath, 
-        Dictionary<(Position, Position), List<string>> cache
+        string currentPath
     )
     {
         List<string> paths = new List<string>();
@@ -135,19 +136,19 @@ public class Day21 : BaseDay
 
         if (from.I - to.I > 0)
         {
-            paths.AddRange(GetAllPaths(new Position(from.I - 1, from.J), to, currentPath + "^", cache));
+            paths.AddRange(GetAllPaths(new Position(from.I - 1, from.J), to, currentPath + "^"));
         }
         if (from.I - to.I < 0)
         {
-            paths.AddRange(GetAllPaths(new Position(from.I + 1, from.J), to, currentPath + "V", cache));
+            paths.AddRange(GetAllPaths(new Position(from.I + 1, from.J), to, currentPath + "V"));
         }
         if (from.J - to.J > 0)
         {
-            paths.AddRange(GetAllPaths(new Position(from.I, from.J - 1), to, currentPath + "<", cache));
+            paths.AddRange(GetAllPaths(new Position(from.I, from.J - 1), to, currentPath + "<"));
         }
         if (from.J - to.J < 0)
         {
-            paths.AddRange(GetAllPaths(new Position(from.I, from.J + 1), to, currentPath + ">", cache));
+            paths.AddRange(GetAllPaths(new Position(from.I, from.J + 1), to, currentPath + ">"));
         }
 
         return paths;
