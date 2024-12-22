@@ -6,16 +6,21 @@ public class Day21 : BaseDay
 
     public Day21()
     {
-        _codes = File.ReadAllLines(InputFilePath);
+        _codes = ["029A", "980A", "179A", "456A", "379A"]; //File.ReadAllLines(InputFilePath);
     }
 
     public override ValueTask<string> Solve_1()
     {
-        List<string> paths = GetAllPaths("029A");
+        int res = 0;
+        foreach (var code in _codes)
+        {
+            int length = GetShortestPath(code);
+            int num = int.Parse(code.Replace("A", ""));
+            Console.WriteLine($"{length} * {num}");
+            res += length * num;
+        }
 
-        int shortestLength = paths.Min(p => p.Length);
-
-        return new((shortestLength * 29).ToString());
+        return new(res.ToString());
     }
 
     public override ValueTask<string> Solve_2()
@@ -23,7 +28,7 @@ public class Day21 : BaseDay
         return new("");
     }
 
-    private List<string> GetAllPaths(string code)
+    private int GetShortestPath(string code)
     {
         List<string> one = GetAllPaths(code, _numpad, new Dictionary<(Position, Position), List<string>>());
 
@@ -36,14 +41,17 @@ public class Day21 : BaseDay
             two.AddRange(GetAllPaths(path, _directionalPad, cache));
         }
 
-        List<string> three = new List<string>();
+        int shortest = int.MaxValue;
         foreach (string path in two)
         {
-            //var t = GetAllPaths(path, _directionalPad, cache);
-            //three.AddRange(t);
+            var t = GetPathLength(path, _directionalPad, cache);
+            if (t < shortest)
+            {
+                shortest = t;
+            }
         }
 
-        return three;
+        return shortest;
     }
 
     private List<string> GetAllPaths(
@@ -77,6 +85,38 @@ public class Day21 : BaseDay
         }
 
         return paths;
+    }
+
+    private int GetPathLength(
+        string code,
+        Dictionary<char, Position> pad,
+        Dictionary<(Position, Position), List<string>> cache
+    )
+    {
+        Position from = pad['A'];
+        int length = 0;
+
+        foreach (char button in code)
+        {
+            Position to = pad[button];
+
+            if (cache.ContainsKey((from, to)))
+            {
+                length += cache[(from, to)][0].Length;
+                length++;
+            }
+            else
+            {
+                var segments = GetAllPaths(from, to, "", cache);
+                cache[(from, to)] = segments;
+                length += cache[(from, to)][0].Length;
+                length++;
+            }
+
+            from = to;
+        }
+
+        return length;
     }
 
     private List<string> GetAllPaths(
