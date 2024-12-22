@@ -157,7 +157,8 @@ public class Day20 : BaseDay
     )
     {
         HashSet<Position> cheatPositions = new HashSet<Position>();
-        Dictionary<Position, int> visitedWithDistance = new Dictionary<Position, int>();
+        HashSet<PositionWithDistance> visited = new HashSet<PositionWithDistance>();
+        List<PositionWithDistance> toVisitWithDistance = new List<PositionWithDistance>();
 
         Direction fromDirection = GetOpposite(direction);
         for (int i = 0; i < 4; ++i)
@@ -172,46 +173,48 @@ public class Day20 : BaseDay
             Position? nxtCheat = GetNextInDirection(current, d, map.Length, map[0].Length);
             if (nxtCheat != null && map[nxtCheat.I][nxtCheat.J] == '#')
             {
-                visitedWithDistance[nxtCheat] = 1;
+                toVisitWithDistance.Add(new(nxtCheat, 1));
             }
         }
 
-        while (visitedWithDistance.Count > 0)
+        while (toVisitWithDistance.Any())
         {
-            KeyValuePair<Position, int> toCheck = visitedWithDistance.First();
-            visitedWithDistance.Remove(toCheck.Key);
-
-            if (map[toCheck.Key.I][toCheck.Key.J] != '#')
+            PositionWithDistance toCheck = toVisitWithDistance[0];
+            toVisitWithDistance.RemoveAt(0);
+            if (visited.Add(toCheck))
             {
-                int originalDistance = distances[toCheck.Key.I][toCheck.Key.J];
-                int cheatDistance = distances[current.I][current.J] + toCheck.Value;
-                if (originalDistance - cheatDistance >= 100)
+                if (map[toCheck.Position.I][toCheck.Position.J] != '#')
                 {
-                    cheatPositions.Add(toCheck.Key);
+                    int originalDistance = distances[toCheck.Position.I][toCheck.Position.J];
+                    int cheatDistance = distances[current.I][current.J] + toCheck.Distance;
+                    if (originalDistance - cheatDistance >= 100)
+                    {
+                        cheatPositions.Add(toCheck.Position);
+                    }
                 }
-            }
-            else if (toCheck.Value < 20)
-            {
-                Position? a = GetNextInDirection(toCheck.Key, Direction.West, map.Length, map[0].Length);
-                Position? b = GetNextInDirection(toCheck.Key, Direction.East, map.Length, map[0].Length);
-                Position? c = GetNextInDirection(toCheck.Key, Direction.North, map.Length, map[0].Length);
-                Position? d = GetNextInDirection(toCheck.Key, Direction.South, map.Length, map[0].Length);
+                else if (toCheck.Distance < 20)
+                {
+                    Position? a = GetNextInDirection(toCheck.Position, Direction.West, map.Length, map[0].Length);
+                    Position? b = GetNextInDirection(toCheck.Position, Direction.East, map.Length, map[0].Length);
+                    Position? c = GetNextInDirection(toCheck.Position, Direction.North, map.Length, map[0].Length);
+                    Position? d = GetNextInDirection(toCheck.Position, Direction.South, map.Length, map[0].Length);
 
-                if (a != null && !visitedWithDistance.ContainsKey(a))
-                {
-                    visitedWithDistance[a] = toCheck.Value + 1;
-                }
-                if (b != null && !visitedWithDistance.ContainsKey(b))
-                {
-                    visitedWithDistance[b] = toCheck.Value + 1;
-                }
-                if (c != null && !visitedWithDistance.ContainsKey(c))
-                {
-                    visitedWithDistance[c] = toCheck.Value + 1;
-                }
-                if (d != null && !visitedWithDistance.ContainsKey(d))
-                {
-                    visitedWithDistance[d] = toCheck.Value + 1;
+                    if (a != null)
+                    {
+                        toVisitWithDistance.Add(new(a, toCheck.Distance + 1));
+                    }
+                    if (b != null)
+                    {
+                        toVisitWithDistance.Add(new(b, toCheck.Distance + 1));
+                    }
+                    if (c != null)
+                    {
+                        toVisitWithDistance.Add(new(c, toCheck.Distance + 1));
+                    }
+                    if (d != null)
+                    {
+                        toVisitWithDistance.Add(new(d, toCheck.Distance + 1));
+                    }
                 }
             }
         }
@@ -311,6 +314,8 @@ public class Day20 : BaseDay
     }
 
     private record Position(int I, int J);
+
+    private record PositionWithDistance(Position Position, int Distance);
 
     private enum Direction
     {
