@@ -6,7 +6,7 @@ public class Day23 : BaseDay
     {
         string[] lines = File.ReadAllLines(InputFilePath);
 
-        HashSet<(string, string, string)> groups = new HashSet<(string, string, string)>();
+        HashSet<string> groups = new HashSet<string>();
         Dictionary<string, List<string>> dictionary = ToDictionary(lines);
 
         foreach (var kv in dictionary)
@@ -24,13 +24,13 @@ public class Day23 : BaseDay
                     {
                         var group = new List<string> { computer1, kv.Value[i], kv.Value[j] };
                         group = group.OrderBy(x => x).ToList();
-                        groups.Add((group[0], group[1], group[2]));
+                        groups.Add($"{group[0]},{group[1]},{group[2]}");
                     }
                 }
             }
         }
 
-        int res = groups.Count(g => g.Item1.StartsWith("t") || g.Item2.StartsWith("t") || g.Item3.StartsWith("t"));
+        int res = groups.Count(g => g.Split(",").Any(x => x.StartsWith("t")));
 
         return new (res.ToString());
     }
