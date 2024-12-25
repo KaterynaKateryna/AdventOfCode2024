@@ -48,17 +48,35 @@ public class Day24 : BaseDay
             CalculateValueForOutput(output, rulesByOutput, values);
         }
 
-        string[] outputs = rulesByOutput.Keys.Where(k => k.StartsWith("z")).OrderBy(k => k).ToArray();
-
-        BitArray bitArray = new BitArray(outputs.Select(o => values[o]).ToArray());
-
-        long res = GetIntFromBitArray(bitArray);
+        long res = GetInteger("z", rulesByOutput, values);
 
         return new(res.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
+        (Dictionary<string, bool> values, List<Rule> rules) = Init();
+
+        Dictionary<string, Rule> rulesByOutput = ToDicitonary(rules);
+
+        foreach (string output in rulesByOutput.Keys)
+        {
+            CalculateValueForOutput(output, rulesByOutput, values);
+        }
+
+        long x = GetInteger("x", rulesByOutput, values);
+        long y = GetInteger("y", rulesByOutput, values);
+        long z = GetInteger("z", rulesByOutput, values);
+
+        if (x + y == z)
+        {
+            Console.WriteLine($"{x} + {y} = {z}");
+        }
+        else
+        {
+            Console.WriteLine($"{x} + {y} != {z}");
+        }
+
         return new("");
     }
 
@@ -106,6 +124,16 @@ public class Day24 : BaseDay
                 values[rule.Output] = a ^ b;
                 break;
         }
+    }
+
+    private long GetInteger(string letter, Dictionary<string, Rule> rulesByOutput, Dictionary<string, bool> values)
+    {
+        string[] outputs = values.Keys.Where(k => k.StartsWith(letter)).OrderBy(k => k).ToArray();
+
+        BitArray bitArray = new BitArray(outputs.Select(o => values[o]).ToArray());
+
+        long res = GetIntFromBitArray(bitArray);
+        return res;
     }
 
     private long GetIntFromBitArray(BitArray bitArray)
